@@ -19,6 +19,34 @@
 {% block content %}
 Replace This
 {% endblock %}
+
+
+<div id="short-url">
+<form method="post" action="/create">
+<fieldset>
+<legend>Shorten this:</legend>
+<table>
+{% ifnotequal error Non %}
+<tr>
+  <td colspan="2">{{ error }}</td>
+</tr>
+{% endifnotequal %}
+<tr>
+<td>URL:</td><td><input type="text" name="url" size="64" /></td>
+</tr>
+<tr>
+<td>Alias (optional):</td><td>{{ domain }}/ <input type="text" name="alias" /></td>
+</tr>
+<tr>
+<td colspan="2"><input type="submit" value="Submit"></td>
+</tr>
+</table>
+</fieldset>
+</form>
+</div>
+</div>
+
+
 </div>
 <div id="footer">
 </div>

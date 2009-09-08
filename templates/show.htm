@@ -1,12 +1,25 @@
 {% extends "_base.htm" %}
 {% block title %}
-  Permalink - Show {{ key %}}
+  Permalink - Ad hoc shortcuts
 {% endblock %}
 {% block content %}
-<h2>Show</h2>
-<p>
 
-</p>
+<h2>Shortcut link was created!</h2>
+<div class="spacer">&nbsp;</div>
+<div class="url">
+The following URL:<br/>
+<blockquote>
+<strong>{{ url }}</strong>
+</blockquote>
+</div>
+
+<div class="shortcut">
+Can be reached via:<br/>
+<blockquote>
+<strong>{{ domain }}/{{ shortcut }}</strong>&nbsp;{<a href="/{{ shortcut }}" target="_blank">open in new window</a>}
+</blockquote>
+</div>
+
 {% endblock %}
 
 
