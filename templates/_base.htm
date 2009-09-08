@@ -1,0 +1,25 @@
+<head>
+<title>
+  {% block title %} Permalink - Replace this {% endblock %}
+</title>
+<link href="/static/permalink.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="header">
+<h1><a href="index.htm">Permalink</a></h1>
+<ul>
+<li><a href="about.htm"
+    {% ifequal path '/about.htm' %} 
+      class="selected"
+    {% endifequal %}
+    >About</a></li>
+</ul>
+</div>
+<div id="content">
+{% block content %}
+Replace This
+{% endblock %}
+</div>
+<div id="footer">
+</div>
+</body>
