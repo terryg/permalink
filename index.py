@@ -9,7 +9,7 @@ from google.appengine.ext import db
 GLOBAL_INDEX_PERMALINK = "permalink"
 
 class GlobalIndex(db.Model):
-  max_index = db.IntegerProperty(required=True,default=0)
+  max_index = db.IntegerProperty(required=True,default=1)
 
 class Permalink(db.Model):
   url = db.StringProperty(required=True)
@@ -19,6 +19,13 @@ class Permalink(db.Model):
 class PermalinkAlias(db.Model):
   link = db.ReferenceProperty(required=True)
   name = db.StringProperty(required=True)
+
+class PermalinkCounter(db.Model):
+  count = db.IntegerProperty(required=True,default=0)
+
+class PermalinkTracker(db.Model):
+  referrer = db.StringProperty(required=True)
+  ip_address = db.StringProperty(required=True)
 
 # Code adapted from: http://en.wikipedia.org/wiki/Base_36#Python_Conversion_Code
 # This is base 62:
@@ -43,7 +50,8 @@ def base_n_encode(num, alphabets=ALPHABETS):
     return rv
 
 def get_domain(handler):
-  pos = handler.request.url.rfind('/')
+  pos = handler.request.url.find('http://')
+  pos = handler.request.url.find('//')  
   return handler.request.url[0:pos]
 
 def post_permalink(url, alias):
@@ -91,6 +99,22 @@ def do_render(handler, tname = 'index.htm', values = { }):
   handler.response.out.write(outstr)
   return True
 
+class InfoHandler(webapp.RequestHandler):
+  def get(self):
+    logging.info("INFO HANDLER")
+    logging.info("Request path: " + self.request.path);
+    pos = self.request.path.rfind('/')
+    path = self.request.path[pos+1:]
+    logging.info("Request path w/o /: " + path)
+
+    permalink = None
+    for link in Permalink.gql('WHERE shortcut = :1', path):
+      permalink = link
+
+    counter = PermalinkCounter.get_by_key_name("shortcut" + permalink.shortcut)
+
+    do_render(self,'info.htm',{'count' : counter.count, 'url' : permalink.url, 'shortcut' : permalink.shortcut})
+  
 class CreateHandler(webapp.RequestHandler):
   def get(self):
     do_render(self,'index.htm')
@@ -116,12 +140,30 @@ class CreateHandler(webapp.RequestHandler):
 
 class MainHandler(webapp.RequestHandler):
   def get(self):      
-    if do_render(self,self.request.path):
-      return
-    do_render(self,'index.htm')
+    logging.info("Request path: " + self.request.path);
+    path = self.request.path[1:]
+    logging.info("Request path w/o /: " + path)
 
+    permalink = None
+    for link in Permalink.gql('WHERE shortcut = :1', path):
+      logging.info("Found: " + link.url)
+      permalink = link
+
+    if permalink is None:
+      if do_render(self,self.request.path):
+        return
+      do_render(self,'index.htm')
+    else:
+      counter = PermalinkCounter.get_by_key_name("shortcut" + permalink.shortcut)
+      if counter is None:
+        counter = PermalinkCounter(key_name="shortcut" + permalink.shortcut)
+      counter.count += 1
+      counter.put()
+      self.redirect(permalink.url)
+    
 application = webapp.WSGIApplication([
   ('/create', CreateHandler),
+  ('/info/.*', InfoHandler),
   ('/.*', MainHandler)],
   debug=True)
 

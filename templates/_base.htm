@@ -20,7 +20,9 @@
 Replace This
 {% endblock %}
 
+<div class="spacer">&nbsp;</div>
 
+{% block urlform %}
 <div id="short-url">
 <form method="post" action="/create">
 <fieldset>
@@ -32,10 +34,7 @@ Replace This
 </tr>
 {% endifnotequal %}
 <tr>
-<td>URL:</td><td><input type="text" name="url" size="64" /></td>
-</tr>
-<tr>
-<td>Alias (optional):</td><td>{{ domain }}/ <input type="text" name="alias" /></td>
+<td>URL</td><td><input type="text" name="url" size="64" /></td>
 </tr>
 <tr>
 <td colspan="2"><input type="submit" value="Submit"></td>
@@ -45,7 +44,7 @@ Replace This
 </form>
 </div>
 </div>
-
+{% endblock %}
 
 </div>
 <div id="footer">

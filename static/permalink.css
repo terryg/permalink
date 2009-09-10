@@ -17,7 +17,7 @@ h1, h2, h3, h4 {
 
 #header {
   background-color: #ddd;
-  border-top: 3px solid #000;
+  border-left: 10px solid #000;
   overflow: hidden;
   padding: 7px;
   margin-top: 5px;
