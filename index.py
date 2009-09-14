@@ -50,8 +50,7 @@ def base_n_encode(num, alphabets=ALPHABETS):
     return rv
 
 def get_domain(handler):
-  pos = handler.request.url.find('http://')
-  pos = handler.request.url.find('//')  
+  pos = handler.request.url.find(handler.request.path)
   return handler.request.url[0:pos]
 
 def post_permalink(url, alias):
