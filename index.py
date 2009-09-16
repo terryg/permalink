@@ -111,7 +111,10 @@ class InfoHandler(webapp.RequestHandler):
       permalink = link
 
     counter = PermalinkCounter.get_by_key_name("shortcut" + permalink.shortcut)
-
+    if counter is None:
+      counter = PermalinkCounter(key_name="shortcut" + permalink.shortcut)
+      counter.count = 0
+ 
     do_render(self,'info.htm',{'count' : counter.count, 'url' : permalink.url, 'shortcut' : permalink.shortcut})
   
 class CreateHandler(webapp.RequestHandler):
