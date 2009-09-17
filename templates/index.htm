@@ -5,7 +5,25 @@
 {% block content %}
 <div id="">
 <h2>Ad hoc URL shortening.</h2>
+
+<h2>Toolbar shortcut</h2>
+Click and drag link to your toolbar.
+<blockquote>
+<a href="javascript:(
+  function(to,p) {
+    var myForm=document.createElement('form');
+    myForm.method='post';
+    myForm.action=to;
+    for (var k in p) {
+      var myInput=document.createElement('input');
+      myInput.setAttribute('name',k);
+      myInput.setAttribute('value',p[k]);
+      myForm.appendChild(myInput);
+    }
+    document.body.appendChild(myForm);
+    myForm.submit();
+    document.body.removeChild(myForm);
+  })('{{ domain }}/create',{url:encodeURIComponent(location.href)});">Permalink</a>
+</blockquote>
+
 {% endblock %}
-
-
-
