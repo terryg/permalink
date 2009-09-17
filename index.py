@@ -50,6 +50,8 @@ def base_n_encode(num, alphabets=ALPHABETS):
     return rv
 
 def get_domain(handler):
+  if handler.request.path is '/':
+    return handler.request.url[0:-1]
   pos = handler.request.url.find(handler.request.path)
   return handler.request.url[0:pos]
 
