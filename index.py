@@ -1,5 +1,6 @@
 import os
 import logging
+import urllib
 import wsgiref.handlers
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
@@ -124,7 +125,7 @@ class CreateHandler(webapp.RequestHandler):
     do_render(self,'index.htm')
 
   def post(self):
-    url = self.request.get('url')
+    url = urllib.unquote(self.request.get('url'))
     alias = self.request.get('alias')
     if url == '':
       do_render(self,
