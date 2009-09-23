@@ -20,6 +20,37 @@ Can be reached via:<br/>
 </blockquote>
 </div>
 
+<div class="clipboard">
+<script type="text/javascript">
+//<[![CDATA[
+
+    function copyIntoClipboard(text) {
+
+        var flashId = 'flashId-HKxmj5';
+
+        var clipboardSWF = '/static/clipboard.swf';
+
+        if(!document.getElementById(flashId)) {
+            var div = document.createElement('div');
+            div.id = flashId;
+            document.body.appendChild(div);
+        }
+        document.getElementById(flashId).innerHTML = '';
+        var content = '<embed src="' + 
+            clipboardSWF +
+            '" FlashVars="clipboard=' + encodeURIComponent(text) +
+            '" width="0" height="0" type="application/x-shockwave-flash"></embed>';
+        document.getElementById(flashId).innerHTML = content;
+    };
+
+    copyIntoClipboard("{{domain}}/{{ shortcut }}");
+//]]>
+</script>
+<strong>This shortcut link has been copied to your clipboard.</strong>
+</div>
+
+<div class="spacer">&nbsp;</div>
+
 <div class="info-tab">
 For more information on this link's usage:<br/>
 <blockquote>
@@ -27,6 +58,30 @@ For more information on this link's usage:<br/>
 </blockquote>
 </div>
 
-{% endblock %}
+<div id="">
+<h2>Ad hoc URL shortening.</h2>
 
+<div id="short-url">
+<form method="post" action="/create">
+<fieldset>
+<legend>Shorten this:</legend>
+<table>
+{% ifnotequal error None %}
+<tr>
+  <td colspan="2">{{ error }}</td>
+</tr>
+{% endifnotequal %}
+<tr>
+<td>URL</td><td><input type="text" name="url" size="64" /></td>
+</tr>
+<tr>
+<td colspan="2"><input type="submit" value="Submit"></td>
+</tr>
+</table>
+</fieldset>
+</form>
+</div>
+</div>
+
+{% endblock %}
 

@@ -20,33 +20,9 @@
 Replace This
 {% endblock %}
 
-<div class="spacer">&nbsp;</div>
+</div>
 
-{% block urlform %}
-<div id="short-url">
-<form method="post" action="/create">
-<fieldset>
-<legend>Shorten this:</legend>
-<table>
-{% ifnotequal error Non %}
-<tr>
-  <td colspan="2">{{ error }}</td>
-</tr>
-{% endifnotequal %}
-<tr>
-<td>URL</td><td><input type="text" name="url" size="64" /></td>
-</tr>
-<tr>
-<td colspan="2"><input type="submit" value="Submit"></td>
-</tr>
-</table>
-</fieldset>
-</form>
-</div>
-</div>
-{% endblock %}
-
-</div>
 <div id="footer">
 </div>
+
 </body>

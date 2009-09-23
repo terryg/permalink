@@ -3,8 +3,35 @@
   Permalink
 {% endblock %}
 {% block content %}
+
+
 <div id="">
 <h2>Ad hoc URL shortening.</h2>
+
+{{ total }} links.
+
+<div id="short-url">
+<form method="post" action="/create">
+<fieldset>
+<legend>Shorten this:</legend>
+<table>
+{% ifnotequal error None %}
+<tr>
+  <td colspan="2">{{ error }}</td>
+</tr>
+{% endifnotequal %}
+<tr>
+<td>URL</td><td><input type="text" name="url" size="64" /></td>
+</tr>
+<tr>
+<td colspan="2"><input type="submit" value="Submit"></td>
+</tr>
+</table>
+</fieldset>
+</form>
+</div>
+</div>
+
 
 <h2>Toolbar shortcut</h2>
 Click and drag link to your toolbar.
