@@ -1,14 +1,15 @@
 {% extends "_base.htm" %}
 {% block title %}
-  Permalink
+  Perma-link
 {% endblock %}
 {% block content %}
 
 
 <div id="">
 <h2>Ad hoc URL shortening.</h2>
-
-{{ total }} links.
+<blockquote>
+I've shortened {{ total }} links.
+</blockquote>
 
 <div id="short-url">
 <form method="post" action="/create">
