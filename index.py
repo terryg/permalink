@@ -2,30 +2,80 @@ import os
 import logging
 import urllib
 import wsgiref.handlers
+import random
+from google.appengine.api import memcache
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
 
-GLOBAL_INDEX_PERMALINK = "permalink"
+PERMALINK = "permalink"
 
-class GlobalIndex(db.Model):
-  max_index = db.IntegerProperty(required=True,default=1)
+class GeneralCounterShardConfig(db.Model):
+  """Tracks the number of shards for each named counter."""
+  name = db.StringProperty(required=True)
+  num_shards = db.IntegerProperty(required=True, default=20)
+
+class GeneralCounterShard(db.Model):
+  """Shards for each named counter"""
+  name = db.StringProperty(required=True)
+  count = db.IntegerProperty(required=True, default=0)
+ 
+           
+def get_count(name):
+  """Retrieve the value for a given sharded counter.
+ 
+  Parameters:
+    name - The name of the counter 
+  """
+  total = memcache.get(name)
+  if total is None:
+    total = 0
+    for counter in GeneralCounterShard.all().filter('name = ', name):
+      total += counter.count
+    memcache.add(name, str(total), 60)
+  return total
+ 
+def increment(name):
+  """Increment the value for a given sharded counter.
+ 
+  Parameters:
+    name - The name of the counter 
+  """
+  config = GeneralCounterShardConfig.get_or_insert(name, name=name)
+  def txn():
+    index = random.randint(0, config.num_shards - 1)
+    shard_name = name + str(index)
+    counter = GeneralCounterShard.get_by_key_name(shard_name)
+    if counter is None:
+      counter = GeneralCounterShard(key_name=shard_name, name=name)
+    counter.count += 1
+    counter.put()
+  db.run_in_transaction(txn)
+  memcache.incr(name)
+ 
+def increase_shards(name, num): 
+  """Increase the number of shards for a given sharded counter.
+  Will never decrease the number of shards.
+ 
+  Parameters:
+    name - The name of the counter
+    num - How many shards to use
+   
+  """
+  config = GeneralCounterShardConfig.get_or_insert(name, name=name)
+  def txn():
+    if config.num_shards < num:
+      config.num_shards = num
+      config.put()   
+  db.run_in_transaction(txn)
 
 class Permalink(db.Model):
   url = db.StringProperty(required=True)
   index = db.IntegerProperty(required=True)
   shortcut = db.StringProperty(required=True)
 
-class PermalinkAlias(db.Model):
-  link = db.ReferenceProperty(required=True)
-  name = db.StringProperty(required=True)
-
-class PermalinkCounter(db.Model):
-  count = db.IntegerProperty(required=True,default=0)
-
 class PermalinkTracker(db.Model):
-  referrer = db.StringProperty(required=True)
   ip_address = db.StringProperty(required=True)
 
 # Code adapted from: http://en.wikipedia.org/wiki/Base_36#Python_Conversion_Code
@@ -62,14 +112,9 @@ def post_permalink(url, alias):
     count += 1
 
   if count is 0:
-    def txn():
-      link_index = GlobalIndex.get_by_key_name(GLOBAL_INDEX_PERMALINK)
-      if link_index is None:
-        link_index = GlobalIndex(key_name=GLOBAL_INDEX_PERMALINK)
-      new_index = link_index.max_index
-      link_index.max_index += 1
-      link_index.put()
+    new_index = int(get_count(PERMALINK)) + 1
 
+    def txn():
       shortcut = str(base_n_encode(new_index))
 
       logging.info('New index ' + str(new_index))
@@ -77,8 +122,7 @@ def post_permalink(url, alias):
       logging.info('Shortcut ' + shortcut)
       logging.info('Alias ' + alias)
       new_link = Permalink(
-        key_name = GLOBAL_INDEX_PERMALINK + str(new_index),
-        parent = link_index,
+        key_name = PERMALINK + str(new_index),
         index = new_index,
         url = url,
         shortcut = shortcut)
@@ -87,6 +131,9 @@ def post_permalink(url, alias):
       logging.info('After put')
       logging.info(new_link.key())
     db.run_in_transaction(txn)          
+
+    increment(PERMALINK)
+
 
 def do_render(handler, tname = 'index.htm', values = { }):
   temp = os.path.join(os.path.dirname(__file__), 'templates/' + tname)    
@@ -113,12 +160,9 @@ class InfoHandler(webapp.RequestHandler):
     for link in Permalink.gql('WHERE shortcut = :1', path):
       permalink = link
 
-    counter = PermalinkCounter.get_by_key_name("shortcut" + permalink.shortcut)
-    if counter is None:
-      counter = PermalinkCounter(key_name="shortcut" + permalink.shortcut)
-      counter.count = 0
+    count = get_count("shortcut" + permalink.shortcut)
  
-    do_render(self,'info.htm',{'count' : counter.count, 'url' : permalink.url, 'shortcut' : permalink.shortcut})
+    do_render(self,'info.htm',{'count' : count, 'url' : permalink.url, 'shortcut' : permalink.shortcut})
   
 class CreateHandler(webapp.RequestHandler):
   def get(self):
@@ -155,15 +199,12 @@ class MainHandler(webapp.RequestHandler):
       permalink = link
 
     if permalink is None:
-      if do_render(self,self.request.path):
+      total = get_count(PERMALINK)
+      if do_render(self,self.request.path,{'total' : total}):
         return
-      do_render(self,'index.htm')
+      do_render(self,'index.htm',{'total' : total})
     else:
-      counter = PermalinkCounter.get_by_key_name("shortcut" + permalink.shortcut)
-      if counter is None:
-        counter = PermalinkCounter(key_name="shortcut" + permalink.shortcut)
-      counter.count += 1
-      counter.put()
+      increment("shortcut" + permalink.shortcut)
       self.redirect(permalink.url)
     
 application = webapp.WSGIApplication([
