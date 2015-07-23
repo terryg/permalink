@@ -1,4 +1,4 @@
 # permalink
 URL shortener
 
-http://perma-link.appspot.com
+http://permalink-1015.appspot.com
